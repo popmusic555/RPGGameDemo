@@ -1,0 +1,22 @@
+{
+  "name": "gamedemo",
+  "version": "1.0.0",
+  "description": "RPG游戏Demo",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/popmusic555/RPGGameDemo.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/popmusic555/RPGGameDemo/issues"
+  },
+  "homepage": "https://github.com/popmusic555/RPGGameDemo#readme",
+  "dependencies": {
+    "protobufjs": "^6.8.8"
+  }
+}

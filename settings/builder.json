@@ -1,5 +1,18 @@
 {
+  "appKey": "",
+  "appSecret": "",
+  "encryptJs": true,
   "excludeScenes": [],
+  "fb-instant-games": {},
+  "includeAnySDK": false,
+  "includeSDKBox": false,
+  "inlineSpriteFrames": true,
+  "inlineSpriteFrames_native": true,
+  "jailbreakPlatform": false,
+  "md5Cache": false,
+  "mergeStartScene": false,
+  "oauthLoginServer": "",
+  "optimizeHotUpdate": false,
   "orientation": {
     "landscapeLeft": true,
     "landscapeRight": true,
@@ -7,7 +20,21 @@
     "upsideDown": false
   },
   "packageName": "org.cocos2d.helloworld",
+  "privateKey": "",
+  "qqplay": {
+    "REMOTE_SERVER_ROOT": "",
+    "orientation": "portrait"
+  },
   "startScene": "2d2f792f-a40c-49bb-a189-ed176a246e49",
-  "title": "hello_world",
-  "webOrientation": "auto"
+  "title": "GameDemo",
+  "webOrientation": "auto",
+  "wechatgame": {
+    "REMOTE_SERVER_ROOT": "",
+    "appid": "wx418db1f58a18fa35",
+    "isSubdomain": false,
+    "orientation": "portrait",
+    "subContext": ""
+  },
+  "xxteaKey": "1f84ff07-c5f4-48",
+  "zipCompressJs": true
 }
