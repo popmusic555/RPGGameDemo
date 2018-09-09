@@ -1,4 +1,210 @@
 (function () {
+
+	// 响应消息
+	var Response = function (protocal_num , context , callback) {
+	    this._valid = true;
+	    // this._Name = name;
+	    this._Context = context;
+	    this._Callback = callback;
+	    this._ProtocalNum = protocal_num;
+	    this._ProtocalLen = null;
+	    this._ProtocalData = null;
+	}
+	Response.prototype.setProtocalNum = function(num) {
+	    // this._Callback.apply(this._Context , socket_event);
+	    this._ProtocalNum = num;
+	};
+	Response.prototype.setProtocalLen = function(len) {
+	    this._ProtocalLen = len;
+	};
+	Response.prototype.setProtocalData = function(data) {
+	    this._ProtocalData = data;
+	};
+	Response.prototype.trigger = function(protocal_num , protocal_len , protocal_data) {
+	    // this._Callback.apply(this._Context , socket_event);
+	    if(this._ProtocalNum == protocal_num)
+	    {
+	        return this._Callback.call(this._Context , protocal_num , protocal_len , protocal_data);
+	    }
+	    return true;    
+	};
+	Response.prototype.setInvalid = function(flag) {
+	    this._IsValid = flag;
+	};
+	Response.prototype.isValid = function() {
+	    return this._IsValid;
+	};
+
+
+	// 请求消息
+	var Request = function (packageData) {
+	    this._PackageData = packageData;
+	    this._IsValid = true;
+	};
+
+	Request.prototype.trigger = function(socket_client) {
+	    if(this._IsValid)
+	    {
+	        socket_client.sendMessage(this._PackageData);
+	        this.setInvalid();
+	    }
+	};
+
+	Request.prototype.setInvalid = function() {
+	    this._IsValid = false;
+	};
+
+	Request.prototype.isValid = function() {
+	    return this._IsValid;
+	};
+
+	/*
+	网络通讯管道 
+
+	主要保存请求和响应对象
+
+	每条管道中 必然会有响应对象 但未必有请求对象
+	无请求对象 主要用来处理服务器推送数据
+
+	*/
+	var Channel = function (group) {
+	    this._valid = true;
+	    // this._ID = num; // channel对象的名称
+	    this._Request = null; // 请求对象
+	    this._Response = null; // 响应对象
+	    this.setGroup(group);
+	};
+	Channel.prototype.setGroup = function (group) {
+	    this._Group = group;
+	};
+	Channel.prototype._SetRequest = function (req) {
+	    this._Request = req;
+	};
+	Channel.prototype._SetResponse = function (resp) {
+	    this._Response = resp;
+	};
+	Channel.prototype.request = function (packageData) {
+	    var req = new Request(packageData);
+	    this._SetRequest(req);
+	    return this;
+	};
+	Channel.prototype.response = function (protocal_num , context , callback) {
+	    var resp = new Response(protocal_num , context , callback);
+	    this._SetResponse(resp);
+	    return this;
+	};
+	Channel.prototype.send = function () {
+	    if(this._Request)
+	    {
+	        this._Group.add(this);
+	        this._Group.autoSend();
+	    }
+	    else
+	    {
+	        console.error("Send a not hava request Channel");
+	    }
+	};
+	Channel.prototype.setValid = function(flag) {
+	    this._valid = !!flag;
+	};
+	Channel.prototype.isValid = function() {
+	    return this._valid;
+	};
+	// 触发请求函数
+	Channel.prototype.triggerReq = function (socket_client) {
+	    if(this._Request && socket_client)
+	    {
+	        this._Request.trigger(socket_client);
+	        return true;
+	    }
+	    return false;
+	};
+	// 触发响应函数
+	Channel.prototype.triggerResp = function (protocal_num , protocal_len , protocal_data) {
+	    if(!this._Request || this.isInvalidRequest())
+	    {
+	        return this._Response.trigger(protocal_num , protocal_len , protocal_data);
+	    }
+	    return true;
+	};
+	// 请求失效
+	Channel.prototype.removeInvalidRequest = function () {
+	    if(this._Request && this.isInvalidRequest())
+	    {
+	        this._SetRequest(null);
+	        return true;
+	    }
+	    return false;
+	};
+	// 请求是否已经失效
+	Channel.prototype.isInvalidRequest = function () {
+	    return this._Request && !this._Request.isValid();
+	};
+
+
+	// 管线管理器
+	var ChannelGroup = function () {
+	    this._SClient = null;
+	    this._Channels = new Array; // channel对象的名称
+	};
+	ChannelGroup.prototype.emit = function (protocal_num , protocal_len , protocal_data) {
+		var length = this._Channels.length;
+		var isAutoSendChannel = null;
+        for (var index = length-1; index >= 0; index--) {
+            var channel = this._Channels[index];
+            if(channel.isValid())
+            {
+                var result = channel.triggerResp(protocal_num , protocal_len , protocal_data);
+                channel.setValid(result);
+                if(channel.removeInvalidRequest())
+                {
+                    isAutoSendChannel = channel;
+                }
+            }else{
+                this.remove(index);
+            }
+        }
+        if(isAutoSendChannel)
+        {
+        	console.log("removeInvalidRequest OK   and   autoSend" , isAutoSendChannel._ID);
+        	this.autoSend();
+        }
+	};
+	ChannelGroup.prototype.autoSend = function () {
+		if(!this._SClient)
+		{
+			return;
+		}
+		var length = this._Channels.length;
+        for (let index = 0; index < length; index++) {
+            var channel = this._Channels[index];
+            var result = channel.triggerReq(this._SClient);
+            if (result)
+            {
+                return;
+            }
+        }
+	};
+	ChannelGroup.prototype.buildChannel = function () {
+		var channel = new Channel(this);
+        return channel;
+	};
+	ChannelGroup.prototype.add = function (channel) {
+		this._Channels.push(channel);
+	};
+	ChannelGroup.prototype.remove = function (index) {
+		this._Channels[index].setGroup(null);
+		this._Channels.splice(index, 1);
+	};
+	ChannelGroup.prototype.setSocketClient = function (socket_client) {
+		this._SClient = socket_client;
+	};
+	ChannelGroup.prototype.removeSocketClient = function () {
+		this._SClient = null;
+	};
+
+
+
     var SocketClient = {
         // 协议号字节数(默认为4)
         _ProtocalNum_size:4,
@@ -11,6 +217,11 @@
 
         _Socket:null,
         _Ws_url:null,
+        _ChannelGroup:null,
+
+        init:function () {
+        	this._ChannelGroup = new ChannelGroup();
+        },
         // 连接Socket
         connect:function (ws_url) {
             if (!ws_url) {
@@ -88,15 +299,13 @@
             {
                 console.log("The sendData is : " , data);
                 this._Socket.send(data);
+                return true;
             }
+            return false;
         },
 
         // 请求
         requestWithStream:function (protocol_num , protobuf_class , protobuf_obj) {
-            if(!this.isConnected())
-            {
-                return;
-            }
             var byteArray = protobuf_class.encode(protobuf_obj).finish();
             var sendData = null;
             // 组包 协议号(4)+数据长度(2)+二进制数据
@@ -127,10 +336,6 @@
             return newStreamData;
         },
         requestWithText:function (text) {
-            if(!this.isConnected())
-            {
-                return;
-            }
             this._Socket.binaryType = "blob";
             // this.sendMessage(text);
             return newStreamData;
@@ -159,11 +364,10 @@
 
         // 构建请求
         buildRequest:function (protocol_num , protobuf_class , protobuf_obj) {
-            if(!this.isConnected())
-            {
-                return;
-            }
-
+            // if(!this.isConnected())
+            // {
+            //     return;
+            // }
             var packageData = null;
             if (protocol_num instanceof String || typeof protocol_num == "string") {
                 packageData = this.requestWithText(protocol_num);
@@ -176,47 +380,58 @@
             {
                 console.error("The send request is Not valid data");
             }
-
-            var channel = ChannelGroup.buildChannel();
-            channel.requset(request);
+            console.error("Package is : " , packageData);
+            var channel = this._ChannelGroup.buildChannel();
+            console.log(channel);
+            channel.request(packageData);
             return channel;
         },
 
         // 构建响应
         buildResponse:function (protocol_num , context , callback) {
-            var channel = ChannelGroup.buildChannel();
+            var channel = this._ChannelGroup.buildChannel();
             channel.response(protocol_num , context , callback);
+            channel.send();
             return channel;
         },
 
-        // 构建响应
-        buildResponse:function (protocol_num , context , callback) {
-            var channel = ChannelGroup.buildChannel();
-            channel.response(protocol_num , context , callback);
-            return channel;
-        },
+        // // 构建响应
+        // buildResponse:function (protocol_num , context , callback) {
+        //     var channel = this._ChannelGroup.buildChannel();
+        //     channel.response(protocol_num , context , callback);
+        //     return channel;
+        // },
 
         // --------------------------------------------------------------------
 
         onConnected:function (event) {
             console.log("WSocket Send Text WS was opened.");
-            ChannelGroup.setSocketClient(this);
+            this._ChannelGroup.setSocketClient(this);
+            this._ChannelGroup.autoSend();
         },
         onMessage:function (event) {
             console.log("WSocket response text msg: " + event.data);
-
-            ChannelGroup.emit(protocal_num , protocal_len , protocal_data);
+            var dataView = new DataView(event.data);
+            var protocal_num = dataView.getUint32(0 , this._Endian_Mode);
+            var protocal_len = dataView.getUint16(this._ProtocalNum_size , this._Endian_Mode);
+            var protocal_data = new Uint8Array(event.data.slice(this._ProtocalNum_size + this._ProtocalDataLen_size));
+            console.log("protocalNum : " , protocal_num);
+            console.log("protocalLen : " , protocal_len);
+            console.log("protocalData : " , protocal_data);
+            // console.log("create proto Obj is : " , Player.decode(protocal_data));
+            this._ChannelGroup.emit(protocal_num , protocal_len , protocal_data);
         },
         onClose:function (event) {
             console.log("WSocket WebSocket instance closed.");
-            ChannelGroup.removeSocketClient();
+            this._ChannelGroup.removeSocketClient();
         },
         onError:function (event) {
             console.log("WSocket Send Text fired an error");
-            ChannelGroup.removeSocketClient();
+            this._ChannelGroup.removeSocketClient();
         },
     };
     SocketClient.config();
+    SocketClient.init();
     window.SocketClient = SocketClient;
     console.log("SocketClient is Require");
 })();
