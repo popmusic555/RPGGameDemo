@@ -139,21 +139,44 @@ cc.Class({
 
         // this.netWorkTest();
         console.log(SocketClient);
-        // SocketClient.connect("ws://echo.websocket.org");
+        SocketClient.connect("ws://echo.websocket.org");
 
-        // setTimeout(function () {
-        //     var Player = Protocal.grace.proto.msg.Player;
-        //     var player = new Player();
-        //     player.id = 2;
-        //     player.name = "赵杨";
-        //     player.enterTime = 10086;
-        //     SocketClient.buildRequest(100 , Player , player).response(100 , this , function (number , len , data) {
-        //         console.log("The Socket Response is number is : " , number);
-        //         console.log("The Socket Response is len is : " , len);
-        //         console.log("The Socket Response is data is : " , data);
-        //     }).send();
-        //     // SocketClient.request("The message is text message");
-        // }.bind(this), 2000);
+        setTimeout(function () {
+
+
+            // SocketClient.request("The message is text message");
+        }.bind(this), 2000);
+
+
+        var Player = Protocal.grace.proto.msg.Player;
+        var player = new Player();
+        player.id = 2;
+        player.name = "赵杨";
+        player.enterTime = 10086;
+
+        SocketClient.buildRequest(100 , Player , player).response(100 , this , function (number , len , data) {
+            console.log("The Socket Response is number is : " , number);
+            console.log("The Socket Response is len is : " , len);
+            console.log("The Socket Response is data is : " , data);
+            console.log("create proto Obj is : " , Player.decode(data));
+            // return false;
+        }).send();
+
+        SocketClient.buildRequest(100 , Player , player).response(100 , this , function (number , len , data) {
+            console.log("The Socket Response is number is : " , number);
+            console.log("The Socket Response is len is : " , len);
+            console.log("The Socket Response is data is : " , data);
+            console.log("create proto Obj is : " , Player.decode(data));
+            // return false;
+        }).send();
+
+        SocketClient.buildRequest(100 , Player , player).response(100 , this , function (number , len , data) {
+            console.log("The Socket Response is number is : " , number);
+            console.log("The Socket Response is len is : " , len);
+            console.log("The Socket Response is data is : " , data);
+            console.log("create proto Obj is : " , Player.decode(data));
+            // return false;
+        }).send();
     },
 
     protoBufTest:function () {
