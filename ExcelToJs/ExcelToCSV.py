@@ -14,6 +14,96 @@ outputPath = ""
 stepLine = 1
 outputFileType = ".csv"
 
+fieldFlag_MaxNum = 3
+
+# 是否为可以转换成浮点数
+def isCanFloat(value):
+	try:
+		v = float(value)
+	except TypeError:
+		return False
+	except ValueError:
+		return False
+	else:
+		return True
+
+# 是否为可以转换成整数数
+def isCanInt(value):
+	try:
+		v = int(value)
+	except TypeError:
+		return False
+	except ValueError:
+		return False
+	else:
+		return True
+		
+# 解析字段
+def parseField(fieldName):
+	return fieldName.split(u".")
+
+# 是否为有效字段
+def isVaildField(fieldName):
+	if fieldName == "" or fieldName == None:
+		return False
+	fieldData = parseField(fieldName)
+	fieldDataLen = len(fieldData)
+	if fieldDataLen > fieldFlag_MaxNum:
+		return False
+	for i in range(fieldDataLen):
+		fieldType = fieldData[i]
+		if i == 1 and fieldType != u"int" and fieldType != u"float" and fieldType != u"String":
+			return False
+		if i == 2 and fieldType != "array":
+			return False
+	return True
+	
+# 解析字段值
+def isVaildValue(fieldName , value):
+	print False
+	
+
+# 是否为有效数据(类型是否匹配)
+def parseValue(fieldName , value):
+	fieldData = parseField(fieldName)
+	fieldDataLen = len(fieldData)
+	for i in range(fieldDataLen):
+		fieldType = fieldData[i]
+		if i == 1:
+			if fieldType == u"int":
+				print value , "6666666666" , type(value)
+				if isCanInt(value):
+					return value
+				elif value == u"":
+					return "0"
+				else:
+					return None
+			if fieldType == u"float":
+				if isCanFloat(value):
+					return value
+				elif value == u"":
+					return "0.0"
+				else:
+					return None
+		if i == 1 and fieldType == u"String":
+			if value == u"":
+				return u"null"
+			else:
+				value = transferSpecialChar(value)
+				return value
+		if i == 2 and fieldType == u"array":
+			arrayValue = value.split("|")
+			result = ""
+			arrayValueLen = len(arrayValue)
+			for index in arrayValueLen:
+				itemValue = parseValue(fieldData[0] + u"." + fieldData[1] , arrayValue[index])
+				if not itemValue:
+					return None
+				result = result + itemValue
+				if index < arrayValueLen - 1:
+					result = result + u"|"
+			return result
+
 # 获取所有Excel文件路径
 def getAllExcelFile(rootPath):
 	allFiles = []
@@ -38,9 +128,12 @@ def parseExcel(excelFilepath):
 	sheetCount = len(allSheet)
 	for sheet in allSheet:
 		data = parseExcelSheet(sheet)
-		excelDataToCsv(data)
+		if data:
+			dataStr = excelDataToCsvString(data)
+		else:
+			return False
+	return True
 	
-
 # 解析Excel Sheet表
 def parseExcelSheet(sheetObj):
 	print "parse Excel sheet : " , sheetObj.name
@@ -52,30 +145,49 @@ def parseExcelSheet(sheetObj):
 	for i in range(nrows): # 循环逐行打印
 		lineData = sheetObj.row_values(i)
 		object = []
-		if i == stepLine: #此时为字段
-			for value in lineData:
-				object.append(value)
+		if i == 0 + stepLine:
+			#此时为字段
+			for fieldIndex in range(len(lineData)):
+				field = lineData[fieldIndex]
+				if not isVaildField(field):
+					print "Invaild Field name , in Row " + str(fieldIndex+1) , field
+					return None
+					
+				object.append(field)
 		else:
-			for value in lineData:
+			#此时为数据
+			for valueIndex in range(len(lineData)):
+				print lineData[valueIndex] , "77777777777" , type(lineData[valueIndex])
+				value = parseValue(dataObj[0][valueIndex] , str(lineData[valueIndex]))
+				#value = parseValue(dataObj[0][valueIndex] , lineData[valueIndex])
+				if not value:
+					print u"Invaild Value , in Line " + str(i+1) + u" Row " + str(valueIndex+1) , value
+					return None
+				
 				object.append(value)
 		dataObj.append(object)
 	return dataObj
 	
-# 使用数据解析成CSV
-def excelDataToCsv(dataObj):
+# 使用数据解析成CSV ------------------
+def excelDataToCsvString(dataObj):
 	#print len(dataObj) , "package data"
-	lineStr = ""
-	for i in range(len(dataObj)): # 循环逐行打印
+	dataStr = ""
+	for i in range(len(dataObj)):
 		fields = dataObj[0]
 		lineData = dataObj[i]
 		lineDataLen = len(lineData)
 		for index in range(lineDataLen):
 			value = lineData[index]
-			lineStr = lineStr + u'"' + str(value) + u'"'
+			dataStr = dataStr + u'"' + transferSpecialChar(str(value)) + u'"'
+			#dataStr = dataStr + transferSpecialChar(str(value))
 			if index != lineDataLen-1:
-				lineStr = lineStr + u','
-		lineStr = lineStr + u"\n\r"
-	print lineStr
+				dataStr = dataStr + u','
+		dataStr = dataStr + u"\n\r"
+	print dataStr
+	
+# 转译数据中的，防止数据解析时出现问题
+def transferSpecialChar(text):
+	return text.replace(u"," , u"\,")
 
 #-------------------------------------
 	
@@ -151,10 +263,15 @@ def main():
 		# 解析Excel文件
 		for file in allFilepath:
 			print "Processing {0}{1} files".format(file["fileName"] , file["fileSuffix"])
-			parseExcel(file["filePath"])
+			result = parseExcel(file["filePath"])
+			if not result:
+				return False
 	return True
 	
 if __name__ == '__main__':
 	main()
+	#s = ""
+	#print "" in s.split("|") , s.split("|")
+	#print str(99999.9999999)
 	os.system('pause')
 	

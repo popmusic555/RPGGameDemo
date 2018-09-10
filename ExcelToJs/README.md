@@ -30,39 +30,45 @@ Excel表第二行以后所有为正式数据 使用命令可以选择跳过前�
 		int = 字段名称.int.array
 		float = 字段名称.float.array
 		String = 字段名称.String.array
+		
+	特别注意: 字段名称最多三项标识(Ex name.int.array)
+		
 
-数据数据写法规则是 基本数据写法.array 则标注为当前字段为数组类型
+字段数据写法规则是 基本数据写法.array 则标注为当前字段是以此为元素类型的数组
 
-数据类型大小写敏感，请仔细确认填写是大小写无误！
+数据类型大小写敏感，请仔细确认填写是否大小写无误！
 
-数据类型不填写时，工具会弹出错误，并指出出现错误的Excel表中的分表（Sheet）
+数据类型填写不正确时，工具会弹出错误，并指出出现错误的Excel表中的分表（Sheet）
 
 # 数据说明
 
-所有字段不填写默认为字段类型默认值（int = 0 , float = 0.0 , String = ""）, 工具会自动帮助转换，数组数据会将空值全部转换成无元素数据
+数组不填写 数据默认为字段类型默认值（int = 0 , float = 0.0 , String = null , array = null）, 工具会自动帮助转换，数组数据会将空值全部转换成无元素数组   
 
 数据类型不匹配时，工具会自动弹出错误，并指出出现错误数据行数
 
 每条记录中间允许出现断行，但断行中必须全部为空值，不可出现有值情况，否则以正常记录处理
 
-数据中可以出现空字符串，空字符串以空值方式处理
+数据中可以出现空字符串，空字符串以字段默认值方式处理
 
 
 # CSV表 解析格式
 
 	第一行为字段 字段规则与Excel表相同
 	
-	从第二行开始都是数据，Array数据已[]包裹 |分割
+	从第二行开始都是数据，String类型数据以""包裹 Array类型数据以|分割
 	
+	特别注意: 因CSV格式是以英文,字符进行字段的分割处理，所以当String数据中出现英文,字符时，程序全部会进行转译，转译为 \, 来进行标识
+			  解析时只需以英文,字符进行分割即可
+			  #######数组是连续的不可出现元素为空的标准数组(可以是空数组，一旦有了元素，则必须是连续的且非空的元素集合)
 
 # Json & 代码源文件 
 
 	已是格式化的文件 无需再次解析 直接可以使用
 	字段类型对应关系如下：
-		int = JS&lua:number C++&Java:int:
-		float = JS&lua:number C++&Java:float:
-		String = JS&Json:string C++&Java:String:
-		Array = JS&Json:[] C++&Java:[]:
+		int = JS&lua&Json:number C++&Java:int:
+		float = JS&lua&Json:number C++&Java:float:
+		String = JS&lua&Json:string C++&Java:String:
+		Array = JS&Json:[] lua:{} C++&Java:[]:
 
 
 
