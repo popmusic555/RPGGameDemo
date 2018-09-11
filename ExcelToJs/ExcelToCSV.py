@@ -61,8 +61,13 @@ def isVaildField(fieldName):
 # 因Excel所有number都会处理成float类型 导致int类型字段无法判断匹配 故预处理字段
 # 将所有Excel值全部以字符串重新解析 将无小数位number转化成int值 将带有小数位number
 # 转化为float值 其他不做处理
+# 部分数据会出现空格字符串情况 也在此处做处理
 def preParse(value):
 	value = str(value)
+	
+	# 纯空格字符串处理 转换成空字符串("")
+	value = value.replace(u" " , u"")
+	
 	numberObj = value.split(u".")
 	numberObjLen = len(numberObj)
 	if numberObjLen == 2:
@@ -281,7 +286,6 @@ def outputToJava_File(filename , endwith , filepath , filedata):
 
 # 处理传入的命令
 def parseCmd(opts, args):
-	print opts
 	path = None
 	abPath = None
 	for key, value in opts:
