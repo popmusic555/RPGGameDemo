@@ -141,8 +141,10 @@ def parseExcel(excelFilepath , excelFilename):
 	for sheet in allSheet:
 		data = parseExcelSheet(sheet , excelFilename)
 		if data:
+			# 解析成CSV格式数据
 			dataStr = excelDataToCsvString(data)
-			print dataStr
+			# 输出成CSV格式文件
+			outputFile(excelFilename + "." + sheet.name ,dataStr)
 		else:
 			return False
 	return True
@@ -153,12 +155,14 @@ def parseExcelSheet(sheetObj , excelFilename):
 	dataObj = []
 	nrows = sheetObj.nrows # 获取表的行数
 	if nrows <= stepLine + 1:
-		print "this sheetObj " + "[" + sheetObj.name + "]" + " is not have data"
+		print "The Excel " + excelFilename + "." + "[" + sheetObj.name + "]" + " is not have data"
 		return None
 	for i in range(nrows): # 循环逐行打印
+		isHaveValue = False
 		lineData = sheetObj.row_values(i)
 		object = []
 		if i == 0 + stepLine:
+			isHaveValue = True
 			#此时为字段
 			for fieldIndex in range(len(lineData)):
 				field = lineData[fieldIndex]
@@ -169,47 +173,111 @@ def parseExcelSheet(sheetObj , excelFilename):
 		else:
 			#此时为数据
 			for valueIndex in range(len(lineData)):
+				if lineData[valueIndex] != u"":
+					isHaveValue = True
 				value = parseValue(dataObj[0][valueIndex] , lineData[valueIndex])
 				if not value:
 					print ", [" + sheetObj.name + "." + excelFilename + "] Table " + u"Invaild Value , in Line " + str(i+1) + u" Row " + str(valueIndex+1) , lineData[valueIndex]
 					return None
 				object.append(value)
-		dataObj.append(object)
+		if isHaveValue:
+			dataObj.append(object)
 	return dataObj
+	
+# 输出成文件
+def outputFile(filename , filedata):
+	if outputFileType == ".csv":
+		outputToCSV_File(filename , outputFileType , outputPath , filedata)
+	elif outputFileType == ".json":
+		outputToJson_File(filename , outputFileType , outputPath , filedata)
+	elif outputFileType == ".js":	
+		outputToJs_File(filename , outputFileType , outputPath , filedata)
+	elif outputFileType == ".lua":
+		outputTolua_File(filename , outputFileType , outputPath , filedata)
+	elif outputFileType == ".cpp":
+		outputToCpp_File(filename , outputFileType , outputPath , filedata)
+	elif outputFileType == ".java":
+		outputToJava_File(filename , outputFileType , outputPath , filedata)
+	
 	
 # 使用数据解析成CSV ------------------
 def excelDataToCsvString(dataObj):
 	#print len(dataObj) , "package data"
-	dataStr = ""
-	isHaveNull = False
-	for i in range(len(dataObj)):
+	tableStr = ""
+	dataLen = len(dataObj)
+	for i in range(dataLen):
+		lineStr = ""
 		fields = dataObj[0]
 		lineData = dataObj[i]
 		lineDataLen = len(lineData)
 		for index in range(lineDataLen):
 			value = lineData[index]
-			#if value != 0 and value != u"null":
-				#isHaveNull = True
-			dataStr = dataStr + u'"' + transferSpecialChar(str(value)) + u'"'
-			#dataStr = dataStr + transferSpecialChar(str(value))
+			#lineStr = lineStr + u'"' + transferSpecialChar(str(value)) + u'"'
+			lineStr = lineStr + transferSpecialChar(str(value))
 			if index != lineDataLen-1:
-				dataStr = dataStr + u','
-		dataStr = dataStr + u"\n\r"
-	return dataStr
+				lineStr = lineStr + u','
+		tableStr = tableStr + lineStr
+		if i != dataLen-1:
+			tableStr = tableStr + u"\n\r"
+	return tableStr
+
+def outputToCSV_File(filename , endwith , filepath , filedata):
+	filepath = os.path.join(filepath , filename + endwith)
+	with open(filepath,'w') as f: # 如果filename不存在会自动创建， 'w'表示写数据，写之前会清空文件中的原有数据！
+		f.write(filedata)
+	
 	
 # 转译数据中的，防止数据解析时出现问题
 def transferSpecialChar(text):
 	return text.replace(u"," , u"\,")
 
 #-------------------------------------
-	
-# 使用数据解析成Json
-def excelDataToJson(dataObj):
+
+# 使用数据解析成Json -----------------
+def excelDataToJsonString(dataObj):
 	print ""
 	
-# 使用数据解析成Javascript源文件
-def excelDataToJs(dataObj):
+def outputToJson_File(filename , endwith , filepath , filedata):
+	print "Not hava To Json function"
+
+#-------------------------------------
+
+# 使用数据解析成Javascript源文件 -----
+def excelDataToJsString(dataObj):
 	print ""
+
+def outputToJs_File(filename , endwith , filepath , filedata):
+	print "Not hava To Javascript function"
+	
+#-------------------------------------
+
+# 使用数据解析成lua源文件  -----------
+def excelDataToluaString(dataObj):
+	print ""
+
+def outputTolua_File(filename , endwith , filepath , filedata):
+	print "Not hava To lua function"
+	
+#-------------------------------------
+
+# 使用数据解析成C++源文件 ------------
+def excelDataToCppString(dataObj):
+	print ""
+	
+def outputToCpp_File(filename , endwith , filepath , filedata):
+	print "Not hava To Cpp function"
+
+#-------------------------------------
+
+# 使用数据解析成Java源文件 -----------
+def excelDataToJavaString(dataObj):
+	print ""
+	
+def outputToJava_File(filename , endwith , filepath , filedata):
+	print "Not hava To Java function"
+
+#-------------------------------------
+
 
 # 处理传入的命令
 def parseCmd(opts, args):
