@@ -58,46 +58,59 @@ def isVaildField(fieldName):
 			return False
 	return True
 	
-# 解析字段值
-def isVaildValue(fieldName , value):
-	print False
-	
+# 因Excel所有number都会处理成float类型 导致int类型字段无法判断匹配 故预处理字段
+# 将所有Excel值全部以字符串重新解析 将无小数位number转化成int值 将带有小数位number
+# 转化为float值 其他不做处理
+def preParse(value):
+	value = str(value)
+	numberObj = value.split(u".")
+	numberObjLen = len(numberObj)
+	if numberObjLen == 2:
+		if numberObj[0].isdigit() and numberObj[1].isdigit():
+			if int(numberObj[1]) == 0:
+				# 当前为无小数number类型
+				return numberObj[0]
+	return value
 
-# 是否为有效数据(类型是否匹配)
+# 解析字段值
 def parseValue(fieldName , value):
+	# 此处预处理数据
+	strValue = preParse(value)
 	fieldData = parseField(fieldName)
 	fieldDataLen = len(fieldData)
-	for i in range(fieldDataLen):
+	for i in range(fieldDataLen-1,-1,-1):
 		fieldType = fieldData[i]
 		if i == 1:
 			if fieldType == u"int":
-				print value , "6666666666" , type(value)
-				if isCanInt(value):
-					return value
-				elif value == u"":
+				if strValue.isdigit():
+					return strValue
+				elif strValue == u"":
 					return "0"
 				else:
+					print "Error : Value and int type mismatch",
 					return None
 			if fieldType == u"float":
-				if isCanFloat(value):
-					return value
-				elif value == u"":
-					return "0.0"
+				if isCanFloat(strValue):
+					return str(float(strValue))
+				elif strValue == u"":
+					return u"0.0"
 				else:
+					print "Error : Value and float type mismatch",
 					return None
 		if i == 1 and fieldType == u"String":
-			if value == u"":
+			if strValue == u"":
 				return u"null"
 			else:
-				value = transferSpecialChar(value)
-				return value
+				strValue = transferSpecialChar(strValue)
+				return strValue
 		if i == 2 and fieldType == u"array":
-			arrayValue = value.split("|")
+			arrayValue = strValue.split(u"|")
 			result = ""
 			arrayValueLen = len(arrayValue)
-			for index in arrayValueLen:
+			for index in range(arrayValueLen):
 				itemValue = parseValue(fieldData[0] + u"." + fieldData[1] , arrayValue[index])
 				if not itemValue:
+					print "in Array",
 					return None
 				result = result + itemValue
 				if index < arrayValueLen - 1:
@@ -121,21 +134,21 @@ def getAllExcelFile(rootPath):
 	return allFiles
 
 # 解析Excel文件
-def parseExcel(excelFilepath):
+def parseExcel(excelFilepath , excelFilename):
 	print "Parse Excel : " + excelFilepath
 	data = xlrd.open_workbook(excelFilepath) # 打开xls文件
 	allSheet = data.sheets()
-	sheetCount = len(allSheet)
 	for sheet in allSheet:
-		data = parseExcelSheet(sheet)
+		data = parseExcelSheet(sheet , excelFilename)
 		if data:
 			dataStr = excelDataToCsvString(data)
+			print dataStr
 		else:
 			return False
 	return True
 	
 # 解析Excel Sheet表
-def parseExcelSheet(sheetObj):
+def parseExcelSheet(sheetObj , excelFilename):
 	print "parse Excel sheet : " , sheetObj.name
 	dataObj = []
 	nrows = sheetObj.nrows # 获取表的行数
@@ -150,20 +163,16 @@ def parseExcelSheet(sheetObj):
 			for fieldIndex in range(len(lineData)):
 				field = lineData[fieldIndex]
 				if not isVaildField(field):
-					print "Invaild Field name , in Row " + str(fieldIndex+1) , field
+					print ", [" + sheetObj.name + "." + excelFilename + "] Table " + "Invaild Field name , in Row " + str(fieldIndex+1) , field
 					return None
-					
 				object.append(field)
 		else:
 			#此时为数据
 			for valueIndex in range(len(lineData)):
-				print lineData[valueIndex] , "77777777777" , type(lineData[valueIndex])
-				value = parseValue(dataObj[0][valueIndex] , str(lineData[valueIndex]))
-				#value = parseValue(dataObj[0][valueIndex] , lineData[valueIndex])
+				value = parseValue(dataObj[0][valueIndex] , lineData[valueIndex])
 				if not value:
-					print u"Invaild Value , in Line " + str(i+1) + u" Row " + str(valueIndex+1) , value
+					print ", [" + sheetObj.name + "." + excelFilename + "] Table " + u"Invaild Value , in Line " + str(i+1) + u" Row " + str(valueIndex+1) , lineData[valueIndex]
 					return None
-				
 				object.append(value)
 		dataObj.append(object)
 	return dataObj
@@ -172,18 +181,21 @@ def parseExcelSheet(sheetObj):
 def excelDataToCsvString(dataObj):
 	#print len(dataObj) , "package data"
 	dataStr = ""
+	isHaveNull = False
 	for i in range(len(dataObj)):
 		fields = dataObj[0]
 		lineData = dataObj[i]
 		lineDataLen = len(lineData)
 		for index in range(lineDataLen):
 			value = lineData[index]
+			#if value != 0 and value != u"null":
+				#isHaveNull = True
 			dataStr = dataStr + u'"' + transferSpecialChar(str(value)) + u'"'
 			#dataStr = dataStr + transferSpecialChar(str(value))
 			if index != lineDataLen-1:
 				dataStr = dataStr + u','
 		dataStr = dataStr + u"\n\r"
-	print dataStr
+	return dataStr
 	
 # 转译数据中的，防止数据解析时出现问题
 def transferSpecialChar(text):
@@ -263,15 +275,12 @@ def main():
 		# 解析Excel文件
 		for file in allFilepath:
 			print "Processing {0}{1} files".format(file["fileName"] , file["fileSuffix"])
-			result = parseExcel(file["filePath"])
+			result = parseExcel(file["filePath"] , file["fileName"])
 			if not result:
 				return False
 	return True
 	
 if __name__ == '__main__':
 	main()
-	#s = ""
-	#print "" in s.split("|") , s.split("|")
-	#print str(99999.9999999)
 	os.system('pause')
 	
