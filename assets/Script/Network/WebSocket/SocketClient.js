@@ -35,7 +35,6 @@
 	    return this._IsValid;
 	};
 
-
 	// 请求消息
 	var Request = function (packageData) {
 	    this._PackageData = packageData;
@@ -340,34 +339,11 @@
             // this.sendMessage(text);
             return newStreamData;
         },
-
-        // request:function (protocol_num , protobuf_class , protobuf_obj) {
-        //     // 根据协议数据创建管道
-        //     if (protocol_num instanceof String || typeof protocol_num == "string") {
-        //         this.requestWithText(protocol_num);
-        //     }
-        //     else if(protobuf_class && protobuf_obj)
-        //     {
-        //         this.requestWithStream(protocol_num , protobuf_class , protobuf_obj);
-        //     }
-        //     else
-        //     {
-        //         console.error("The send request is Not valid data");
-        //     }
-        // },
-        // 响应
-        response:function (protocol_num,respCallback) {
-            
-        },
-
+        
         // --------------------------------------------------------------------
 
         // 构建请求
         buildRequest:function (protocol_num , protobuf_class , protobuf_obj) {
-            // if(!this.isConnected())
-            // {
-            //     return;
-            // }
             var packageData = null;
             if (protocol_num instanceof String || typeof protocol_num == "string") {
                 packageData = this.requestWithText(protocol_num);
@@ -394,13 +370,6 @@
             channel.send();
             return channel;
         },
-
-        // // 构建响应
-        // buildResponse:function (protocol_num , context , callback) {
-        //     var channel = this._ChannelGroup.buildChannel();
-        //     channel.response(protocol_num , context , callback);
-        //     return channel;
-        // },
 
         // --------------------------------------------------------------------
 

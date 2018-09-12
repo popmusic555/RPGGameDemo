@@ -87,18 +87,18 @@ def parseValue(fieldName , value):
 		fieldType = fieldData[i]
 		if i == 1:
 			if fieldType == u"int":
-				if strValue.isdigit():
+				if strValue == u"":
+						return "0"
+				elif strValue.isdigit():
 					return strValue
-				elif strValue == u"":
-					return "0"
 				else:
 					print "Error : Value and int type mismatch",
 					return None
 			if fieldType == u"float":
-				if isCanFloat(strValue):
-					return str(float(strValue))
-				elif strValue == u"":
+				if strValue == u"":
 					return u"0.0"
+				elif isCanFloat(strValue):
+					return str(float(strValue))
 				else:
 					print "Error : Value and float type mismatch",
 					return None
@@ -109,6 +109,8 @@ def parseValue(fieldName , value):
 				strValue = transferSpecialChar(strValue)
 				return strValue
 		if i == 2 and fieldType == u"array":
+			if strValue == u"":
+				return u"null"
 			arrayValue = strValue.split(u"|")
 			result = ""
 			arrayValueLen = len(arrayValue)
@@ -208,22 +210,20 @@ def outputFile(filename , filedata):
 # 使用数据解析成CSV ------------------
 def excelDataToCsvString(dataObj):
 	#print len(dataObj) , "package data"
-	tableStr = ""
+	lineStrArray = []
 	dataLen = len(dataObj)
 	for i in range(dataLen):
-		lineStr = ""
+		valueArray = []
 		fields = dataObj[0]
 		lineData = dataObj[i]
 		lineDataLen = len(lineData)
 		for index in range(lineDataLen):
 			value = lineData[index]
-			#lineStr = lineStr + u'"' + transferSpecialChar(str(value)) + u'"'
-			lineStr = lineStr + transferSpecialChar(str(value))
-			if index != lineDataLen-1:
-				lineStr = lineStr + u','
-		tableStr = tableStr + lineStr
-		if i != dataLen-1:
-			tableStr = tableStr + u"\n\r"
+			#lineData[index] = u'"' + transferSpecialChar(str(value)) + u'"'
+			valueArray.append(transferSpecialChar(str(value)))
+		lineStr = u','.join(valueArray)
+		lineStrArray.append(lineStr)
+	tableStr = u"\n\r".join(lineStrArray)
 	return tableStr
 
 def outputToCSV_File(filename , endwith , filepath , filedata):
@@ -234,7 +234,7 @@ def outputToCSV_File(filename , endwith , filepath , filedata):
 	
 # 转译数据中的，防止数据解析时出现问题
 def transferSpecialChar(text):
-	return text.replace(u"," , u"\,")
+	return text.replace(u"," , u"\,").decode('string_escape')
 
 #-------------------------------------
 
