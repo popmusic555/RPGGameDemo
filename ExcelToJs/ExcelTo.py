@@ -286,16 +286,13 @@ def outputToJava_File(filename , endwith , filepath , filedata):
 
 # 处理传入的命令
 def parseCmd(opts, args):
-	path = None
-	abPath = None
+	path = ""
+	outpath = ""
 	for key, value in opts:
 		if key in ['-p', '--path']:
 			path = value
-		if key in ['-a', '--absolutepath']:
-			abPath = value
 		if key in ['-o', '--out']:
-			global outputPath  
-			outputPath = value
+			outpath = value
 		if key in ['-s', '--step']:
 			global stepLine
 			if not value.isdigit():
@@ -321,22 +318,25 @@ def parseCmd(opts, args):
 				print "the output file type is undefined"
 				return False
 	global srcPath
-	srcPath = abPath or (os.path.join(sys.path[0] , (path or "")))
+	srcPath = os.path.abspath(path)
+	global outputPath
+	outputPath = os.path.abspath(outpath)
 	
-	print '源文件路径' , path
-	print '源文件绝对路径' , abPath
+	print '源文件路径' , srcPath
 	print '输出路径' , outputPath
 	print '跳过行数' , stepLine
 	print '输出的文件类型' , outputFileType
 	return True
 
 def main():
-	#curPath = os.path.join(sys.path[0] , "excel_data")
-	#excel2Javascript(curPath)
 	# 处理命令
 	opts, args = getopt.getopt(sys.argv[1:], 'p:a:o:s:t:', ['path=', 'absolutepath' , 'out=', 'step=' , "type="])
 	if(not parseCmd(opts, args)):
 		return False
+	# 判断输出路径是否存在
+	if not os.path.exists(outputPath) or not os.path.isdir(outputPath):
+		os.makedirs(outputPath)
+		print "Make directory [{0}]  Path : {1}".format(os.path.basename(outputPath) , outputPath)
 	# 获取所有Excel文件
 	allFilepath = getAllExcelFile(srcPath);
 	if len(allFilepath) <= 0:
@@ -346,7 +346,7 @@ def main():
 	else:
 		# 解析Excel文件
 		for file in allFilepath:
-			print "Processing {0}{1} files".format(file["fileName"] , file["fileSuffix"])
+			print "\nProcessing {0}{1} files".format(file["fileName"] , file["fileSuffix"])
 			result = parseExcel(file["filePath"] , file["fileName"])
 			if not result:
 				return False
