@@ -81,7 +81,15 @@
 	};
 	Channel.prototype._SetResponse = function (resp) {
 	    this._Response = resp;
-	};
+    };
+    Channel.prototype.isHasRequest = function () {
+        if(this._Request)
+        {
+            return true;
+        }
+        
+        return false;
+    };
 	Channel.prototype.request = function (packageData) {
 	    var req = new Request(packageData);
 	    this._SetRequest(req);
@@ -196,11 +204,14 @@
 		this._Channels[index].setGroup(null);
 		this._Channels.splice(index, 1);
     };
-    ChannelGroup.prototype.clearAllRequest = function () {
+    ChannelGroup.prototype.clearRequestChannel = function () {
         var len = this._Channels.length;
-        for (let index = 0; index < len; index++) {
+        for (let index = len; index >= 0; index--) {
             const channel = this._Channels[index];
-            channel._SetRequest(null);
+            if(channel.isHasRequest())
+            {
+                this.remove(index);
+            }
         }
     };
 	ChannelGroup.prototype.setSocketClient = function (socket_client) {
@@ -397,7 +408,7 @@
         onClose:function (event) {
             console.log("WSocket WebSocket instance closed.");
             this._ChannelGroup.removeSocketClient();
-            this._ChannelGroup.clear();
+            this._ChannelGroup.clearRequestChannel();
         },
         onError:function (event) {
             console.log("WSocket Send Text fired an error");
