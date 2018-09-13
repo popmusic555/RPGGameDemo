@@ -138,13 +138,14 @@
 	// 请求是否已经失效
 	Channel.prototype.isInvalidRequest = function () {
 	    return this._Request && !this._Request.isValid();
-	};
+    };
+    // 
 
 
 	// 管线管理器
 	var ChannelGroup = function () {
 	    this._SClient = null;
-	    this._Channels = new Array; // channel对象的名称
+        this._Channels = new Array; // channel对象的名称
 	};
 	ChannelGroup.prototype.emit = function (protocal_num , protocal_len , protocal_data) {
 		var length = this._Channels.length;
@@ -194,7 +195,14 @@
 	ChannelGroup.prototype.remove = function (index) {
 		this._Channels[index].setGroup(null);
 		this._Channels.splice(index, 1);
-	};
+    };
+    ChannelGroup.prototype.clearAllRequest = function () {
+        var len = this._Channels.length;
+        for (let index = 0; index < len; index++) {
+            const channel = this._Channels[index];
+            channel._SetRequest(null);
+        }
+    };
 	ChannelGroup.prototype.setSocketClient = function (socket_client) {
 		this._SClient = socket_client;
 	};
@@ -211,8 +219,8 @@
         _ProtocalDataLen_size:2,
         // 字节序模式(大端模式or小端模式 默认大端模式)
         _Endian_Mode:false,
-        // 发送模式(默认blob模式 字符串使用此模式)
-        _Send_Mode:"blob",
+        // 发送模式(默认模式 字符串使用此模式)
+        _Send_Mode:"arraybuffer",
 
         _Socket:null,
         _Ws_url:null,
@@ -231,6 +239,7 @@
             }
             this._Ws_url = ws_url;
             this._Socket = new WebSocket(this._Ws_url);
+            this._Socket.binaryType = this._Send_Mode;
             this._Socket.onopen = function (event) {
                 this.onConnected(event);
             }.bind(this);
@@ -253,10 +262,6 @@
         disconnect:function () {
             if (this._Socket)
             {
-                this._Socket.onopen = null;
-                this._Socket.onmessage = null;
-                this._Socket.onclose = null;
-                this._Socket.onerror = null;
                 this._Ws_url = null;
                 this._Socket.close();
                 this._Socket = null;
@@ -330,13 +335,11 @@
             //     // web平台
             //     sendData = newByteArray;
             // }
-            this._Socket.binaryType = "arraybuffer";
             // this.sendMessage(newStreamData);
             return newStreamData;
         },
         requestWithText:function (text) {
-            this._Socket.binaryType = "blob";
-            // this.sendMessage(text);
+            this.sendMessage(text);
             return newStreamData;
         },
         
@@ -345,10 +348,11 @@
         // 构建请求
         buildRequest:function (protocol_num , protobuf_class , protobuf_obj) {
             var packageData = null;
-            if (protocol_num instanceof String || typeof protocol_num == "string") {
-                packageData = this.requestWithText(protocol_num);
-            }
-            else if(protobuf_class && protobuf_obj)
+            // if (protocol_num instanceof String || typeof protocol_num == "string") {
+            //     packageData = this.requestWithText(protocol_num);
+            // }
+            // else 
+            if(protocol_num && protobuf_class && protobuf_obj)
             {
                 packageData = this.requestWithStream(protocol_num , protobuf_class , protobuf_obj);
             }
@@ -393,14 +397,15 @@
         onClose:function (event) {
             console.log("WSocket WebSocket instance closed.");
             this._ChannelGroup.removeSocketClient();
+            this._ChannelGroup.clear();
         },
         onError:function (event) {
             console.log("WSocket Send Text fired an error");
             this._ChannelGroup.removeSocketClient();
         },
     };
-    SocketClient.config();
     SocketClient.init();
+    SocketClient.config();
     window.SocketClient = SocketClient;
     console.log("SocketClient is Require");
 })();

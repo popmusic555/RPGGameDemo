@@ -1,3 +1,5 @@
+import { setTimeout } from "timers";
+
 var PokemonMonster = require("PokemonMonster")
 var PokemonSummon = require("PokemonSummon")
 // var ProtoBuf = require("protobuf");
@@ -154,29 +156,33 @@ cc.Class({
         player.name = "赵杨";
         player.enterTime = 10086;
 
-        SocketClient.buildRequest(100 , Player , player).response(100 , this , function (number , len , data) {
-            console.log("The Socket Response is number is : " , number);
-            console.log("The Socket Response is len is : " , len);
-            console.log("The Socket Response is data is : " , data);
-            console.log("create proto Obj is : " , Player.decode(data));
-            // return false;
-        }).send();
-
-        SocketClient.buildRequest(100 , Player , player).response(100 , this , function (number , len , data) {
-            console.log("The Socket Response is number is : " , number);
-            console.log("The Socket Response is len is : " , len);
-            console.log("The Socket Response is data is : " , data);
-            console.log("create proto Obj is : " , Player.decode(data));
-            // return false;
-        }).send();
-
-        SocketClient.buildRequest(100 , Player , player).response(100 , this , function (number , len , data) {
-            console.log("The Socket Response is number is : " , number);
-            console.log("The Socket Response is len is : " , len);
-            console.log("The Socket Response is data is : " , data);
-            console.log("create proto Obj is : " , Player.decode(data));
-            // return false;
-        }).send();
+        setTimeout(function () {
+            SocketClient.buildRequest(100 , Player , player).response(100 , this , function (number , len , data) {
+                console.log("The Socket1 Response is number is : " , number);
+                console.log("The Socket1 Response is len is : " , len);
+                console.log("The Socket1 Response is data is : " , data);
+                console.log("create proto Obj is : " , Player.decode(data));
+                // return false;
+            }).send();
+    
+            // SocketClient.disconnect();
+    
+            SocketClient.buildRequest(100 , Player , player).response(100 , this , function (number , len , data) {
+                console.log("The Socket2 Response is number is : " , number);
+                console.log("The Socket2 Response is len is : " , len);
+                console.log("The Socket2 Response is data is : " , data);
+                console.log("create proto Obj is : " , Player.decode(data));
+                // return false;
+            }).send();
+    
+            SocketClient.buildRequest(100 , Player , player).response(100 , this , function (number , len , data) {
+                console.log("The Socket3 Response is number is : " , number);
+                console.log("The Socket3 Response is len is : " , len);
+                console.log("The Socket3 Response is data is : " , data);
+                console.log("create proto Obj is : " , Player.decode(data));
+                // return false;
+            }).send();
+        } , 3000);
     },
 
     protoBufTest:function () {
