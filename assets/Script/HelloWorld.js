@@ -1,5 +1,3 @@
-import { setTimeout } from "timers";
-
 var PokemonMonster = require("PokemonMonster")
 var PokemonSummon = require("PokemonSummon")
 // var ProtoBuf = require("protobuf");
@@ -162,20 +160,22 @@ cc.Class({
                 console.log("The Socket1 Response is len is : " , len);
                 console.log("The Socket1 Response is data is : " , data);
                 console.log("create proto Obj is : " , Player.decode(data));
+                // SocketClient.disconnect();
                 // return false;
             }).send();
     
-            // SocketClient.disconnect();
-    
-            SocketClient.buildRequest(100 , Player , player).response(100 , this , function (number , len , data) {
+            SocketClient.disconnect();
+            player.enterTime = 20086;
+            SocketClient.buildRequest(101 , Player , player).response(101 , this , function (number , len , data) {
                 console.log("The Socket2 Response is number is : " , number);
                 console.log("The Socket2 Response is len is : " , len);
                 console.log("The Socket2 Response is data is : " , data);
                 console.log("create proto Obj is : " , Player.decode(data));
                 // return false;
             }).send();
-    
-            SocketClient.buildRequest(100 , Player , player).response(100 , this , function (number , len , data) {
+            
+            player.enterTime = 30086;
+            SocketClient.buildRequest(102 , Player , player).response(102 , this , function (number , len , data) {
                 console.log("The Socket3 Response is number is : " , number);
                 console.log("The Socket3 Response is len is : " , len);
                 console.log("The Socket3 Response is data is : " , data);
@@ -232,32 +232,44 @@ cc.Class({
 
         // WSocket.connect();
 
+        // var Player = Protocal.grace.proto.msg.Player;
+        // var player = new Player();
+        // player.id = 2;
+        // player.name = "赵杨";
+        // player.enterTime = 10086;
+        // var bufferData = Player.encode(player).finish();
+        // console.log("the Player proto buffer is : " , bufferData);
+        // WSocket.test(bufferData , function (event) {
+        //     var uint32 = new Uint32Array(event.data.slice(0 , 4));
+        //     var uint8 = new Uint8Array(event.data.slice(4));
+        //     console.log("WSocket response text event: " , event);
+        //     console.log("WSocket response text msg: " , event.data);
+
+        //     console.log("WSocket response type data : " , uint32);
+        //     console.log("WSocket response type : " , uint32[0]);
+        //     console.log("WSocket response data : " , uint8);
+        //     console.log("create proto Obj is : " , Player.decode(uint8));
+        // });
+
+        // console.log("state is WebSocket.OPEN " , WebSocket.OPEN)
+        // console.log("state is WebSocket.CLOSED " , WebSocket.CLOSED)
+        // console.log("state is WebSocket.CLOSING " , WebSocket.CLOSING)
+        // console.log("state is WebSocket.CONNECTING " , WebSocket.CONNECTING)
+
+        SocketClient.connect("ws://echo.websocket.org");
+
         var Player = Protocal.grace.proto.msg.Player;
         var player = new Player();
         player.id = 2;
         player.name = "赵杨";
-        player.enterTime = 10086;
-        var bufferData = Player.encode(player).finish();
-        console.log("the Player proto buffer is : " , bufferData);
-        WSocket.test(bufferData , function (event) {
-            var uint32 = new Uint32Array(event.data.slice(0 , 4));
-            var uint8 = new Uint8Array(event.data.slice(4));
-            console.log("WSocket response text event: " , event);
-            console.log("WSocket response text msg: " , event.data);
-
-            console.log("WSocket response type data : " , uint32);
-            console.log("WSocket response type : " , uint32[0]);
-            console.log("WSocket response data : " , uint8);
-            console.log("create proto Obj is : " , Player.decode(uint8));
-        });
-
-        console.log("state is WebSocket.OPEN " , WebSocket.OPEN)
-        console.log("state is WebSocket.CLOSED " , WebSocket.CLOSED)
-        console.log("state is WebSocket.CLOSING " , WebSocket.CLOSING)
-        console.log("state is WebSocket.CONNECTING " , WebSocket.CONNECTING)
-
-        // console.log("666666" instanceof String);
-        // console.log(typeof "6666666666666666" == "string");
+        player.enterTime = 40086;
+        SocketClient.buildRequest(102 , Player , player).response(103 , this , function (number , len , data) {
+            console.log("The Socket4 Response is number is : " , number);
+            console.log("The Socket4 Response is len is : " , len);
+            console.log("The Socket4 Response is data is : " , data);
+            console.log("create proto Obj is : " , Player.decode(data));
+            // return false;
+        }).send();
     },
 
     onLoginBtnCallback:function () {

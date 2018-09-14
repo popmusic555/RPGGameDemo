@@ -155,7 +155,30 @@
 	    this._SClient = null;
         this._Channels = new Array; // channel对象的名称
 	};
-	ChannelGroup.prototype.emit = function (protocal_num , protocal_len , protocal_data) {
+	// ChannelGroup.prototype.emit = function (protocal_num , protocal_len , protocal_data) {
+	// 	var length = this._Channels.length;
+	// 	var isAutoSendChannel = null;
+    //     for (var index = length-1; index >= 0; index--) {
+    //         var channel = this._Channels[index];
+    //         if(channel.isValid())
+    //         {
+    //             var result = channel.triggerResp(protocal_num , protocal_len , protocal_data);
+    //             channel.setValid(result);
+    //             if(channel.removeInvalidRequest())
+    //             {
+    //                 isAutoSendChannel = channel;
+    //             }
+    //         }else{
+    //             this.remove(index);
+    //         }
+    //     }
+    //     if(isAutoSendChannel)
+    //     {
+    //     	console.log("removeInvalidRequest OK   and   autoSend" , isAutoSendChannel);
+    //     	this.autoSend();
+    //     }
+    // };
+    ChannelGroup.prototype.emit = function (protocal_num , protocal_len , protocal_data) {
 		var length = this._Channels.length;
 		var isAutoSendChannel = null;
         for (var index = length-1; index >= 0; index--) {
@@ -174,10 +197,11 @@
         }
         if(isAutoSendChannel)
         {
-        	console.log("removeInvalidRequest OK   and   autoSend" , isAutoSendChannel._ID);
+        	console.log("removeInvalidRequest OK   and   autoSend" , isAutoSendChannel);
         	this.autoSend();
         }
 	};
+
 	ChannelGroup.prototype.autoSend = function () {
 		if(!this._SClient)
 		{
@@ -206,9 +230,9 @@
     };
     ChannelGroup.prototype.clearRequestChannel = function () {
         var len = this._Channels.length;
-        for (let index = len; index >= 0; index--) {
+        for (let index = len-1; index >= 0; index--) {
             const channel = this._Channels[index];
-            if(channel.isHasRequest())
+            if(channel.isHasRequest() || !channel.isValid())
             {
                 this.remove(index);
             }
