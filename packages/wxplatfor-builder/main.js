@@ -36,8 +36,8 @@ function getSettingJsName(str)
 	return matchStr;
 }
 
-
-function onBeforeBuildFinish (options, callback) {
+function wechatgameBuild(options)
+{	
     var gameJsPath = path.join(options.dest, 'game.js');  // 获取发布目录下的 main.js 所在路径
     var script = fs.readFileSync(gameJsPath, 'utf8');     // 读取构建好的 main.js
 	
@@ -59,7 +59,7 @@ function onBeforeBuildFinish (options, callback) {
 			fs.writeFileSync(settingJsonPath , newSettingJsStr);
 			
 			var settingJsObj = require(settingJsonPath);
-			var jsonStr = JSON.stringify(settingJsObj);			
+			var jsonStr = JSON.stringify(settingJsObj);
 			fs.writeFileSync(path.join(options.dest, "res/settings.json") , jsonStr);
 			fs.writeFileSync(settingJsonPath , settingJsStr);
 		}
@@ -94,16 +94,76 @@ function onBeforeBuildFinish (options, callback) {
 	
 	script = textArr.join("\r\n");
 	fs.writeFileSync(gameJsPath, script);
+}
+
+
+function onBeforeBuildFinish (options, callback) {
+	var configObj = getPackageConfig();
+	
+	if(options.platform == "wechatgame" && configObj.switch && options.wechatgame.REMOTE_SERVER_ROOT != "")
+	{
+		wechatgameBuild(options);
+		Editor.log("wechatgame is build finsh");
+	}
 	
     callback();
+}
+
+function getPackageConfig()
+{
+	//var path = Editor.url('packages://wxbuilder/LocalStorge.json');
+	var path = Editor.projectPath + "/LocalStorge.json";
+	
+	var configStr = "";
+	var isExists = fs.existsSync(path);
+	if(isExists)
+	{
+		configStr = fs.readFileSync(path, 'utf8');
+	}
+	else
+	{
+		configStr = setPackageConfig({switch:true});
+	}
+	
+	return JSON.parse(configStr);
+}
+
+function setPackageConfig(configObj)
+{
+	var configStr = JSON.stringify(configObj);
+	//fs.writeFileSync( Editor.url('packages://wxbuilder/LocalStorge.json') , configStr);
+	fs.writeFileSync( Editor.projectPath + "/LocalStorge.json" , configStr);
+	
+	return configStr;
 }
 
 module.exports = {
     load () {
         Editor.Builder.on('build-finished', onBeforeBuildFinish);
+		var configObj = getPackageConfig();
     },
 
     unload () {
         Editor.Builder.removeListener('build-finished', onBeforeBuildFinish);
-    }
+    },
+	
+	messages: {
+		switchBtn:function()
+		{
+			var configObj = getPackageConfig();
+			
+			configObj.switch = !configObj.switch;
+			
+			setPackageConfig(configObj);
+			
+			if(configObj.switch)
+			{
+				Editor.log('Open the WxBuilder' );
+			}
+			else
+			{
+				Editor.log('Close the WxBuilder');
+			}
+		}
+	},	
 };

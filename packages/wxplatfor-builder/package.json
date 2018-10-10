@@ -5,8 +5,9 @@
   "author": "GameGZ",
   "main": "main.js",
   "main-menu": {
-    "builder-wx/open": {
-      "message": "hello-world:say-hello"
+    "builder-wx/switch": {
+      "message": "wxbuilder:switchBtn",
+	  "visible": true
     }
   }
 }
