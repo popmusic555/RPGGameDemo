@@ -66,7 +66,7 @@ SignalProcessor.prototype.broadcastSignal = function (signal_id , data) {
 // 回收废弃信道
 SignalProcessor.prototype.recycleChannel = function () {
     var len = this.channelGroup.length;
-    for (let index = 0; index < len; index++) {
+    for (let index = len; index >= 0; index--) {
         var channel = this.channelGroup[index];
         if (channel.isInvalid()) {
             this.channelGroup.splice(index,1);    
