@@ -225,6 +225,7 @@ GSocket.prototype.destory = function () {
         this._closeUrl_ = this._url_;
         this.closeHeartbeat();
         this._url_ = null;
+        this._ConnectedHandler_ = null;
         this._socket_.close();
         this._socket_ = null;
     }
@@ -425,9 +426,11 @@ GSocket.prototype.keepalive = function () {
     if( this._cur_health_ <= 0){
         //此时即可以认为连接断开，可设置重连或者关闭连接
         var address = this._url_;
+        var callback = this._ConnectedHandler_;
         GSocket.log("[ " + address + " ]" + "服务器没有响应");
         this.disconnect();
         this._url_ = address;
+        this._ConnectedHandler_ = callback;
         this.reconnect();
         return false;
 	}
