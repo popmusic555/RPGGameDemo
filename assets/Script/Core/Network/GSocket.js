@@ -98,6 +98,12 @@ var GSocket = function (cfg) {
         heartbeat_switch:true,
         // 心跳间隔(默认3000毫秒)
         heartbeat_time:3000,
+        // 心跳信号
+        heartbeat_signal:1,
+        // 心跳数据
+        heartbeat_data:function () {
+            return parseInt(new Date().getTime() / 1000);
+        },
         max_health:3,
     };
 
@@ -270,7 +276,9 @@ GSocket.prototype.config = function (cfg) {
 
     if (cfg.heartbeat_config) {
         this.heartbeat_config.heartbeat_switch = cfg.heartbeat_config.heartbeat_switch || this.heartbeat_config.heartbeat_switch;
-        this.heartbeat_config.heartbeat_time = cfg.heartbeat_config.heartbeat_time || this.heartbeat_config.heartbeat_time;    
+        this.heartbeat_config.heartbeat_time = cfg.heartbeat_config.heartbeat_time || this.heartbeat_config.heartbeat_time;
+        this.heartbeat_config.heartbeat_signal = cfg.heartbeat_config.heartbeat_signal || this.heartbeat_config.heartbeat_signal;
+        this.heartbeat_config.heartbeat_data = cfg.heartbeat_config.heartbeat_data || this.heartbeat_config.heartbeat_data;
     }
 
     GSocket.log("[ 协议号Size :" , this.protocal_id_len , "]");
@@ -279,6 +287,7 @@ GSocket.prototype.config = function (cfg) {
     GSocket.log("[ 发送模式 :" , this.send_mode , "]");
     GSocket.log("[ 心跳功能 :" , this.heartbeat_config.heartbeat_switch?"开启":"关闭" , "]");
     GSocket.log("[ 心跳间隔 :" , this.heartbeat_config.heartbeat_time , "毫秒" , "]");
+    GSocket.log("[ 心跳信号 :" , this.heartbeat_config.heartbeat_signal , "]");
     
 
     GSocket.log("初始化完成 配置成功");
@@ -432,8 +441,9 @@ GSocket.prototype.keepalive = function () {
         return false;
 	}
 	else{
-        GSocket.log( "发送新一轮心跳" );
-        this.heartbeat(1 , 8888);
+        var data = this.heartbeat_config.heartbeat_data();
+        GSocket.log( "发送新一轮心跳" , data);
+        this.heartbeat(this.heartbeat_signal , data);
         return true;
 	}
 };
