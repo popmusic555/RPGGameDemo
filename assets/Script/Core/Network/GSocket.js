@@ -210,7 +210,7 @@ GSocket.prototype.reconnect = function () {
         return false;
     }
 
-    this.connect(this._url_);  
+    this.connect(this._url_ , this._ConnectedHandler_);  
 };
 
 // 断开websocket
